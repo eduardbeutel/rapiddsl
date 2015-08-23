@@ -1,0 +1,11 @@
+---
+name: Person
+attributes:
+    -
+        name: age
+        type: int
+        modifier: private
+    -
+        name: name
+        type: String
+        modifier: private

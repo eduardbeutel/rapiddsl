@@ -1,0 +1,15 @@
+public class {{ name }}
+{
+{% for attr in attributes %}
+    {{ attr.modifier }} {{ attr.type }} {{ attr.name }};
+{% endfor %}
+
+{% for attr in attributes %}
+    public void set{{ attr.name|title }}({{ attr.type }} {{ attr.name }})
+    {
+        this.{{ attr.name }} = {{ attr.name }};
+    }
+    
+{% endfor %}
+}
+
