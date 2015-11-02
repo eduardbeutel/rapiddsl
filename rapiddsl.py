@@ -1,3 +1,33 @@
+'''
+Copyright (c) 2015, Eduard Beutel
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. All advertising materials mentioning features or use of this software
+   must display the following acknowledgement:
+   This product includes software developed by the copyright holder.
+4. Neither the name of the copyright holder nor the
+   names of its contributors may be used to endorse or promote products
+   derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY EDUARD BEUTEL ''AS IS'' AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+'''
+
 import argparse
 import yaml
 import os
@@ -14,64 +44,53 @@ def clear_dir(dirpath):
     if(os.path.exists(dirpath)):
         shutil.rmtree(dirpath,ignore_errors=True)
     os.mkdir(dirpath)    
- 
+
+def copy(filepath,destination):
+    shutil.copy(filepath,destination)
+     
+def rename(filepath,domain):
+    filedir, filename = os.path.split(filepath)
+    new_filename = domain['name'] + filename
+    new_filepath = os.path.join(filedir,new_filename)
+    new_filepath = new_filepath.replace(".tmpl","")
+    os.rename(filepath,new_filepath)
+    
+def fill(filepath,domain):
+    dirpath, filename = os.path.split(filepath)
+    env = create_jinja2_environment(dirpath)
+    filled = env.get_template(filename).render(domain)
+    f=open(filepath,"w")
+    f.write(filled)
+    f.close()
+    
+def create_jinja2_environment(directory):
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader('rapiddsl', directory),
+        trim_blocks=True
+    )
+    return env
+
 def for_each_file(folder,arguments,functions):
     for dir_path, dirs, filenames in os.walk(folder):
         for filename in filenames: 
             filepath = os.path.join(dir_path,filename)
             for function in functions:
                 function(filepath,arguments)
-
-def copy(filepath,arguments):
-    shutil.copy(filepath,arguments['destination_dir'])
- 
-def rename(filepath,arguments):
-    filedir, filename = os.path.split(filepath)
-    new_filename = arguments['domain']['name'] + filename
-    new_filepath = os.path.join(filedir,new_filename)
-    os.rename(filepath,new_filepath)
-    
-def fill(filepath,arguments):
-    dirpath, filename = os.path.split(filepath)
-    env = build_jinja2_environment(dirpath)
-    filled = env.get_template(filename).render(arguments['domain'])
-    f=open(filepath,"w")
-    f.write(filled)
-    f.close()
-    
-def build_jinja2_environment(directory):
-    env = jinja2.Environment(
-        loader=jinja2.PackageLoader('rapiddsl', directory),
-        trim_blocks=True
-    )
-    return env
-                      
-def prepare_templates(templates_dir,destination_dir):
-    arguments = {}
-    arguments['destination_dir'] = destination_dir
-    for_each_file(templates_dir,arguments,[copy])
-
-def build_parser():
+                
+def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-source',required=True,help='Source folder containing templates and domain.yaml.',metavar='FOLDER')
+    parser.add_argument('-source',required=True,help='Directory containing the templates.',metavar='templates')
+    parser.add_argument('-destination',required=True,help='Directory containing the templates.',metavar='generated')
+    parser.add_argument('-domain',required=True,help='Yaml file containing domain class definition.',metavar='domain.yaml')
     return parser
-
-def standard_paths(source_dir):
-    domain_file = os.path.join(source_dir,'domain.yaml')
-    templates_dir = os.path.join(source_dir,'templates')
-    results_dir = os.path.join(source_dir,'results')
-    return domain_file, templates_dir, results_dir
     
 def main():
-    parser = build_parser()
+    parser = create_parser()
     args = parser.parse_args()
-    domain_file, templates_dir, results_dir = standard_paths(args.source)
-    domain = load(domain_file)
-    clear_dir(results_dir)
-    prepare_templates(templates_dir,results_dir)
-    arguments = {}
-    arguments['domain'] = domain
-    for_each_file(results_dir,arguments,[fill,rename])
+    domain = load(args.domain)
+    clear_dir(args.destination)
+    for_each_file(args.source,args.destination,[copy])
+    for_each_file(args.destination,domain,[fill,rename])
 
 if __name__ == "__main__":
     main()
