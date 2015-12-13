@@ -33,17 +33,22 @@ import yaml
 import os
 import shutil
 import jinja2
+import datetime
     
-def load(filepath):    
+def load_domain(filepath):    
     f = open(filepath)
     document = yaml.load(f)
     f.close();
     return document;
- 
-def clear_dir(dirpath):
-    if(os.path.exists(dirpath)):
-        shutil.rmtree(dirpath,ignore_errors=True)
-    os.mkdir(dirpath)    
+    
+def load_product(filepath,product_name):    
+    f = open(filepath)
+    document = yaml.load(f)
+    f.close();
+    for product in document['products']:
+        if product['name'] == product_name:
+            return product
+    raise 'Product ' + product_name + ' not found in ' + filepath + '.'
 
 def copy(filepath,destination):
     shutil.copy(filepath,destination)
@@ -62,6 +67,11 @@ def fill(filepath,domain):
     f=open(filepath,"w")
     f.write(filled)
     f.close()
+ 
+def remove_if_not_in(filepath,filelist):
+    dirpath, filename = os.path.split(filepath)
+    if filename not in filelist:
+        os.remove(filepath)
     
 def create_jinja2_environment(directory):
     env = jinja2.Environment(
@@ -79,18 +89,29 @@ def for_each_file(folder,arguments,functions):
                 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-source',required=True,help='Directory containing the templates.',metavar='templates')
-    parser.add_argument('-destination',required=True,help='Directory containing the templates.',metavar='generated')
+    parser.add_argument('-product',required=True,help='The name of the product to create.',metavar='product')
     parser.add_argument('-domain',required=True,help='Yaml file containing domain class definition.',metavar='domain.yaml')
     return parser
     
+def create_destination_dir(products_dir,product_name):
+    now = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+    destination_dir = products_dir + '/' + product_name + '_' + now
+    if not os.path.isdir(products_dir):
+        os.mkdir(products_dir)       
+    os.mkdir(destination_dir)   
+    return destination_dir  
+    
 def main():
+    products_filepath = 'products.yaml'
+    products_dir = 'products'
     parser = create_parser()
     args = parser.parse_args()
-    domain = load(args.domain)
-    clear_dir(args.destination)
-    for_each_file(args.source,args.destination,[copy])
-    for_each_file(args.destination,domain,[fill,rename])
+    domain = load_domain(args.domain)
+    product = load_product(products_filepath,args.product)
+    destination_dir = create_destination_dir(products_dir,product['name'])
+    for_each_file(product['templates_dir'],destination_dir,[copy])
+    for_each_file(destination_dir,product['templates'],[remove_if_not_in])
+    for_each_file(destination_dir,domain,[fill,rename])
 
 if __name__ == "__main__":
     main()

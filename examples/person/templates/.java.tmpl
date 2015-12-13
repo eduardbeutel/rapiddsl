@@ -9,6 +9,11 @@ public class {{ name }}
     {
         this.{{ attr.name }} = {{ attr.name }};
     }
+        
+    public void get{{ attr.name|title }}({{ attr.type }} {{ attr.name }})
+    {
+        return this.{{ attr.name }};
+    }
     
 {% endfor %}
 }
