@@ -1,7 +1,0 @@
----
-products:
-    - 
-        name: bean
-        templates_dir: examples/person/templates
-        templates:  
-            - .java.tmpl

@@ -33,45 +33,41 @@ import yaml
 import os
 import shutil
 import jinja2
-import datetime
-    
-def load_domain(filepath):    
+
+def load_domain_object(filepath):    
     f = open(filepath)
     document = yaml.load(f)
     f.close();
     return document;
-    
-def load_product(filepath,product_name):    
-    f = open(filepath)
-    document = yaml.load(f)
-    f.close();
-    for product in document['products']:
-        if product['name'] == product_name:
-            return product
-    raise 'Product ' + product_name + ' not found in ' + filepath + '.'
 
-def copy(filepath,destination):
-    shutil.copy(filepath,destination)
-     
-def rename(filepath,domain):
+def duplicate_template(filepath,destination):
+    if filepath.endswith(".tmpl"):
+        filedir, filename = os.path.split(filepath)
+        filename = filename + ".fill"
+        destination = os.path.join(destination,filename)
+        shutil.copy2(filepath,destination)
+  
+def rename(filepath,new_filename):
     filedir, filename = os.path.split(filepath)
-    new_filename = domain['name'] + filename
     new_filepath = os.path.join(filedir,new_filename)
-    new_filepath = new_filepath.replace(".tmpl","")
     os.rename(filepath,new_filepath)
     
+def rename_final(filepath,domain):
+    if filepath.endswith(".fill"):
+        filedir, filename = os.path.split(filepath)
+        new_filename = domain['name'] + filename
+        new_filename = new_filename.replace(".fill","")
+        new_filename = new_filename.replace(".tmpl","")
+        rename(filepath,new_filename)
+    
 def fill(filepath,domain):
-    dirpath, filename = os.path.split(filepath)
-    env = create_jinja2_environment(dirpath)
-    filled = env.get_template(filename).render(domain)
-    f=open(filepath,"w")
-    f.write(filled)
-    f.close()
- 
-def remove_if_not_in(filepath,filelist):
-    dirpath, filename = os.path.split(filepath)
-    if filename not in filelist:
-        os.remove(filepath)
+    if filepath.endswith(".fill"):
+        dirpath, filename = os.path.split(filepath)
+        env = create_jinja2_environment(dirpath)
+        filled = env.get_template(filename).render(domain)
+        f=open(filepath,"w")
+        f.write(filled)
+        f.close()
     
 def create_jinja2_environment(directory):
     env = jinja2.Environment(
@@ -89,29 +85,16 @@ def for_each_file(folder,arguments,functions):
                 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-product',required=True,help='The name of the product to create.',metavar='product')
-    parser.add_argument('-domain',required=True,help='Yaml file containing domain class definition.',metavar='domain.yaml')
+    parser.add_argument('-do',required=True,help='Yaml file containing domain object (do).',metavar='do.yaml')
     return parser
     
-def create_destination_dir(products_dir,product_name):
-    now = datetime.datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-    destination_dir = products_dir + '/' + product_name + '_' + now
-    if not os.path.isdir(products_dir):
-        os.mkdir(products_dir)       
-    os.mkdir(destination_dir)   
-    return destination_dir  
-    
 def main():
-    products_filepath = 'products.yaml'
-    products_dir = 'products'
     parser = create_parser()
     args = parser.parse_args()
-    domain = load_domain(args.domain)
-    product = load_product(products_filepath,args.product)
-    destination_dir = create_destination_dir(products_dir,product['name'])
-    for_each_file(product['templates_dir'],destination_dir,[copy])
-    for_each_file(destination_dir,product['templates'],[remove_if_not_in])
-    for_each_file(destination_dir,domain,[fill,rename])
+    domain_object = load_domain_object(args.do)
+    destination_dir, filename = os.path.split(args.do)
+    for_each_file(destination_dir,destination_dir,[duplicate_template])
+    for_each_file(destination_dir,domain_object,[fill,rename_final])
 
 if __name__ == "__main__":
     main()
