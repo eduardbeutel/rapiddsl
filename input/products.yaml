@@ -1,0 +1,6 @@
+---
+products:
+    - 
+        name: bean
+        templates:  
+            - .java.tmpl

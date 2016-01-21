@@ -1,0 +1,5 @@
+---
+templates: input
+products: input/products.yaml
+output: output
+globals: input/globals.yaml
