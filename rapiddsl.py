@@ -83,9 +83,8 @@ def for_each_file(folder,arguments,functions):
                 
 def create_parser():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-config',required=True,help='Configuration file.',metavar='config')
-    parser.add_argument('-product',required=True,help='The name of the product to create.',metavar='product')
-    parser.add_argument('-domain',required=True,help='Yaml file containing domain object definition.',metavar='domain.yaml')
+    parser.add_argument('-product','-p',required=True,help='The name of the product to create.',metavar='product')
+    parser.add_argument('-domain-object','-d',required=True,help='Yaml file containing domain object definition.',metavar='domain.yaml')
     return parser
     
 def create_destination_dir(products_dir,product_name):
@@ -99,8 +98,8 @@ def create_destination_dir(products_dir,product_name):
 def main():   
     parser = create_parser()
     args = parser.parse_args()
-    config = load_yaml(args.config)
-    domain = load_yaml(args.domain)
+    config = load_yaml('config.yaml')
+    domain = load_yaml(args.domain_object)
     global_objects = load_yaml(config['globals'])
     domain.update(global_objects)
     product = load_product(config['products'],args.product)
