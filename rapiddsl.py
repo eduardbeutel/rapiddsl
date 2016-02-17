@@ -106,6 +106,7 @@ def main():
     domain = load_yaml(args.domain_object)
     global_objects = load_yaml(config['globals'])
     domain.update(global_objects)
+    domain['now'] = datetime.datetime.now()
     product = load_product(config['products'],args.product)
     destination = create_destination_dir(config['output'],product['name'])
     for_each_file(config['templates'],destination,[copy_tmpl])
