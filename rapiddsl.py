@@ -46,7 +46,7 @@ def load_product(filepath,product_name):
     for product in document['products']:
         if product['name'] == product_name:
             return product
-    raise 'Product ' + product_name + ' not found in ' + filepath + '.'
+    raise Exception('Product ' + product_name + ' not found in ' + filepath + '.')
 
 def copy_tmpl(filepath,destination):
     if filepath.endswith('.tmpl'):
