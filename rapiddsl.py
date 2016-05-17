@@ -34,6 +34,12 @@ import os
 import shutil
 import jinja2
 import datetime
+
+def first_lower(x):
+    return x[0].lower() + x[1:]
+    
+def first_upper(x):
+    return x[0].upper() + x[1:]
     
 def load_yaml(filepath):    
     f = open(filepath)
@@ -72,8 +78,13 @@ def create_jinja2_environment(directory):
         loader=jinja2.PackageLoader('rapiddsl', directory),
         trim_blocks=True
     )
+    register_filters(env)
     return env
 
+def register_filters(env):
+    env.filters['first_upper'] = first_upper
+    env.filters['first_lower'] = first_lower
+    
 def for_each_file(folder,arguments,functions):
     for dir_path, dirs, filenames in os.walk(folder):
         for filename in filenames: 
