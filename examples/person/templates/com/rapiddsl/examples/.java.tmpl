@@ -1,0 +1,21 @@
+/* Created by {{ author }} at {{now.strftime('%Y-%m-%d')}} */
+public class {{ name }}
+{
+{% for attr in attributes %}
+    private {{ attr.type }} {{ attr.name }};
+{% endfor %}
+
+{% for attr in attributes %}
+    public void set{{ attr.name|first_upper }}({{ attr.type }} {{ attr.name }})
+    {
+        this.{{ attr.name }} = {{ attr.name }};
+    }
+        
+    public void get{{ attr.name|first_upper }}({{ attr.type }} {{ attr.name }})
+    {
+        return this.{{ attr.name }};
+    }
+    
+{% endfor %}
+}
+
