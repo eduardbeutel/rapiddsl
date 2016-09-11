@@ -1,7 +1,7 @@
 # rapiddsl
 
 rapiddsl is a tool that can turn any definition into code using templates.
-It can read json or yaml definitions and uses jinja2 templates.
+It can read json or yaml definitions and uses jinja2 templates to generate code.
 
 ## Features
 
