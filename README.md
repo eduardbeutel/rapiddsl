@@ -9,6 +9,7 @@ It can read json or yaml definitions and uses jinja2 templates to generate code.
 - template files directory structure is kept for the generated code
 - extra filters: first_upper, first_lower, const_case
 - now: current moment in time: {{now.strftime('%Y-%m-%d')}}
+- first level elements from definition files can be used in file names
 
 ## Dependencies
 

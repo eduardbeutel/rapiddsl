@@ -56,8 +56,11 @@ def create_jinja2_environment(directory):
 
 def rename(filepath, definition):
     filedir, filename = os.path.split(filepath)
-    new_filename = definition['name'] + filename
-    new_filepath = os.path.join(filedir, new_filename)
+    for key, value in definition.iteritems():
+        if isinstance(value, basestring):
+            marker = '{{' + key + '}}'
+            filename = filename.replace(marker,value)
+    new_filepath = os.path.join(filedir, filename)
     new_filepath = new_filepath.replace('.tmpl', '')
     os.rename(filepath, new_filepath)
 
