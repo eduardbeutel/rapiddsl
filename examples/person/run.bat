@@ -1,1 +1,0 @@
-python ../../rapiddsl/rapiddsl.py -d person.yaml globals.json -t templates -b build

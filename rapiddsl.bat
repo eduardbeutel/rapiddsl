@@ -1,1 +1,0 @@
-python rapiddsl/rapiddsl.py %*

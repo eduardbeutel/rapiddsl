@@ -28,31 +28,105 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 '''
 
-import cli
-import filters
-import loaders
-
 import shutil
 import jinja2
 import datetime
 import os
+import yaml
+import json
+import re
+import argparse
 
-def set_system_globals(definition):
-    definition['now'] = datetime.datetime.now()
+# parser
 
-def merge_definitions(definitions):
-    merged_definition = {}
-    for definition in definitions:
-        merged_definition.update(definition)
-    return merged_definition
+def create_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-d',
+        required=True,
+        nargs='+',
+        help='Definition files paths',
+        metavar='file1.json file2.yaml'
+    )
+    parser.add_argument(
+        '-t',
+        required=True,
+        help='Templates directory',
+        metavar='templates'
+    )
+    parser.add_argument(
+        '-b',
+        required=False,
+        help='Build directory',
+        metavar='build',
+        default = 'build'
+    )
+    return parser
+
+# filters
+
+def register_filters(env):
+    env.filters['first_upper'] = first_upper
+    env.filters['first_lower'] = first_lower
+    env.filters['const_case'] = const_case
+
+def const_case(x):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', x)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).upper()
+
+def first_lower(x):
+    return x[0].lower() + x[1:]
+
+def first_upper(x):
+    return x[0].upper() + x[1:]
+
+# loaders
+    
+def load_yaml(filepath):
+    f = open(filepath)
+    document = yaml.load(f)
+    f.close();
+    return document;
+
+def load_json(filepath):
+    f = open(filepath)
+    document = json.load(f)
+    f.close();
+    return document;
+
+def load(filepaths):
+    definitions = []
+    for filepath in filepaths:
+        if filepath.endswith('.yaml'):
+            definition = load_yaml(filepath)
+        elif filepath.endswith('.json'):
+            definition = load_json(filepath)
+        else:
+            continue
+        definitions.append(definition)
+    return definitions
+    
+# filesystem
+
+def for_each_file(folder,arguments,functions):
+    folder_abs = os.path.abspath(folder)
+    for dir_path, dirs, filenames in os.walk(folder_abs):
+        for filename in filenames:
+            filepath = os.path.join(dir_path,filename)
+            for function in functions:
+                function(filepath,arguments)
+                
+ 
+# templates 
 
 def create_jinja2_environment(directory):
     env = jinja2.Environment(
-        loader=jinja2.PackageLoader('rapiddsl', directory),
+        loader=jinja2.FileSystemLoader(directory),
         trim_blocks=True
     )
-    filters.register_filters(env)
+    register_filters(env)
     return env
+
 
 def rename(filepath, definition):
     filedir, filename = os.path.split(filepath)
@@ -71,14 +145,17 @@ def fill(filepath, definition):
     f = open(filepath, "w")
     f.write(filled)
     f.close()
+                      
+# app
+    
+def set_system_globals(definition):
+    definition['now'] = datetime.datetime.now()
 
-def for_each_file(folder,arguments,functions):
-    folder_abs = os.path.abspath(folder)
-    for dir_path, dirs, filenames in os.walk(folder_abs):
-        for filename in filenames:
-            filepath = os.path.join(dir_path,filename)
-            for function in functions:
-                function(filepath,arguments)
+def merge_definitions(definitions):
+    merged_definition = {}
+    for definition in definitions:
+        merged_definition.update(definition)
+    return merged_definition
 
 def prepare_build(templates_dir,build_dir):
     if os.path.exists(build_dir):
@@ -89,9 +166,9 @@ def build(build_dir,definition):
     for_each_file(build_dir, definition, [fill, rename])
 
 def main():   
-    parser = cli.create_parser()
+    parser = create_parser()
     args = parser.parse_args()
-    definitions = loaders.load(args.d)
+    definitions = load(args.d)
     definition = merge_definitions(definitions)
     set_system_globals(definition)
     prepare_build(args.t,args.b)

@@ -1,15 +1,19 @@
 # rapiddsl
 
-rapiddsl is a tool that can turn any definition into code using templates.
-It can read json or yaml definitions and uses jinja2 templates to generate code.
+rapiddsl is a tool that can turn any json/yaml definition into code using jinja2 templates.
 
 ## Features
 
-- definition files are automatically merged into one definition, this allows global definitions
-- template files directory structure is kept for the generated code
-- extra filters: first_upper, first_lower, const_case
-- now: current moment in time: {{now.strftime('%Y-%m-%d')}}
-- first level elements from definition files can be used in file names
+- Definition files are automatically merged into one definition. This allows global definitions.
+- Template files directory structure is kept for the generated code.
+- First level elements from definition files can be used in file names.
+- Now: current time template constant. Usage: {{now.strftime('%Y-%m-%d')}}.
+- Extra jinja2 filters: first_upper, first_lower, const_case.
+
+## Running the example
+
+	cd examples/person
+	python ../../rapiddsl.py -d person.yaml globals.json -t templates -b build
 
 ## Dependencies
 
