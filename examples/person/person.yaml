@@ -1,12 +1,5 @@
----
 name: Person
 attributes:
-    -
-        name: age
-        type: int
-    -
-        name: name
-        type: String
-    -
-        name: zipCode
-        type: String
+    - { name: age, type: int }
+    - { name: name, type: String }
+    - { name: zipCode, type: String }
