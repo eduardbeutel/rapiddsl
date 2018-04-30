@@ -130,8 +130,8 @@ def create_jinja2_environment(directory):
 
 def rename(filepath, definition):
     filedir, filename = os.path.split(filepath)
-    for key, value in definition.iteritems():
-        if isinstance(value, basestring):
+    for key, value in definition.items():
+        if isinstance(value, str):
             marker = '{{' + key + '}}'
             filename = filename.replace(marker,value)
     new_filepath = os.path.join(filedir, filename)
