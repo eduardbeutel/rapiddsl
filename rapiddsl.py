@@ -84,7 +84,7 @@ def first_upper(x):
     
 def load_yaml(filepath):
     f = open(filepath)
-    document = yaml.load(f)
+    document = yaml.load(f,Loader=yaml.CLoader)
     f.close();
     return document;
 
